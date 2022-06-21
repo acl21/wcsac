@@ -1,4 +1,4 @@
-# Soft Actor-Critic (SAC) implementation in PyTorch
+# Worst-Case Soft Actor-Critic (WCSAC) implementation in PyTorch
 
 This is PyTorch implementation of Worst-Case Soft Actor-Critic (WCSAC) [[Page]](https://ojs.aaai.org/index.php/AAAI/article/view/17272) [[PDF]](https://www.st.ewi.tudelft.nl/mtjspaan/pub/Yang21aaai.pdf). This repository is built on top [PyTorch SAC](https://github.com/denisyarats/pytorch_sac) by Denis Yarats and Ilya Kostrikov.
 
