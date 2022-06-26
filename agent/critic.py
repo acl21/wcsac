@@ -39,3 +39,28 @@ class DoubleQCritic(nn.Module):
             if type(m1) is nn.Linear:
                 logger.log_param(f'train_critic/q1_fc{i}', m1, step)
                 logger.log_param(f'train_critic/q2_fc{i}', m2, step)
+
+
+class SafetyCritic(nn.Module):
+    """Safety Critic Network for estimating Long Term Costs and Variance"""
+    def __init__(self, obs_dim, action_dim, hidden_dim, hidden_depth):
+        super().__init__()
+
+        self.Q_c = utils.mlp(obs_dim + action_dim, hidden_dim, 1, hidden_depth)
+        # TODO: verify that same network is used for Q_c and V_c
+        self.V_c = utils.mlp(obs_dim + action_dim, hidden_dim, 1, hidden_depth)
+        
+        self.outputs = dict()
+        self.apply(utils.weight_init)
+
+    def forward(self, obs, action):
+        assert obs.size(0) == action.size(0)
+
+        obs_action = torch.cat([obs, action], dim=-1)
+        qc = self.Q_c(obs_action)
+        vc = self.V_c(obs_action)
+
+        self.outputs['qc'] = qc
+        self.outputs['vc'] = vc
+
+        return qc, vc
