@@ -127,12 +127,12 @@ class WCSACAgent(Agent):
         # QC, VC targets
         # use next_action as an approximation
         current_QC, current_VC = self.safety_critic(obs, action)  # TODO: Disable gradients
-        target_QC, target_VC = self.safety_critic_target(next_obs, next_action)
-        QC_backup = cost + (not_done * self.discount * target_QC)
-        VC_backup = cost**2 - current_QC**2 + 2 * self.discount * cost * target_QC +\
-            self.discount**2 * target_VC + self.discount**2 * target_QC
-        QC_backup = QC_backup.detach()
-        VC_backup = VC_backup.detach()
+        ns_QC, ns_VC = self.safety_critic_target(next_obs, next_action)
+        target_QC = cost + (not_done * self.discount * ns_QC)
+        target_VC = cost**2 - current_QC**2 + 2 * self.discount * cost * ns_QC +\
+            self.discount**2 * ns_VC + self.discount**2 * ns_QC # Eq. 8 in the paper 
+        target_QC = target_QC.detach()
+        target_VC = target_VC.detach()
 
         # get current Q estimates
         current_Q1, current_Q2 = self.critic(obs, action)
@@ -189,7 +189,7 @@ class WCSACAgent(Agent):
             self.log_alpha_optimizer.step()
 
             self.log_beta_optimizer.zero_grad()
-            beta_loss = (self.beta * (cv - self.target_cost).detach()).mean()
+            beta_loss = (self.beta * (self.target_cost - cv).detach()).mean()
             logger.log('train_beta/loss', beta_loss, step)
             logger.log('train_beta/value', self.beta, step)
             beta_loss.backward()
