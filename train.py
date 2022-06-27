@@ -54,28 +54,42 @@ class Workspace(object):
 
     def evaluate(self):
         average_episode_reward = 0
+        average_episode_cost = 0
+        average_episode_goals_met = 0
         for episode in range(self.cfg.num_eval_episodes):
             obs = self.env.reset()
             self.agent.reset()
             self.video_recorder.init(enabled=(episode == 0))
             done = False
             episode_reward = 0
+            episode_cost = 0
+            episode_goals_met = 0
             while not done:
                 with utils.eval_mode(self.agent):
                     action = self.agent.act(obs, sample=False)
-                obs, reward, done, _ = self.env.step(action)
+                obs, reward, done, info = self.env.step(action)
                 self.video_recorder.record(self.env)
                 episode_reward += reward
+                episode_cost += info.get('cost', 0)
+                episode_goals_met += 1 if info.get('goal_met', False) else 0
 
             average_episode_reward += episode_reward
+            average_episode_cost += episode_cost
+            average_episode_goals_met += episode_goals_met
             self.video_recorder.save(f'{self.step}.mp4')
         average_episode_reward /= self.cfg.num_eval_episodes
+        average_episode_cost /= self.cfg.num_eval_episodes
+        average_episode_goals_met /= self.cfg.num_eval_episodes
         self.logger.log('eval/episode_reward', average_episode_reward,
+                        self.step)
+        self.logger.log('eval/episode_cost', average_episode_cost,
+                        self.step)
+        self.logger.log('eval/episode_goals_met', average_episode_goals_met,
                         self.step)
         self.logger.dump(self.step)
 
     def run(self):
-        episode, episode_reward, done = 0, 0, True
+        episode, episode_reward, episode_cost, done = 0, 0, 0, True
         start_time = time.time()
         while self.step < self.cfg.num_train_steps:
             if done:
@@ -93,11 +107,14 @@ class Workspace(object):
 
                 self.logger.log('train/episode_reward', episode_reward,
                                 self.step)
+                self.logger.log('train/episode_cost', episode_cost,
+                                self.step)
 
                 obs = self.env.reset()
                 self.agent.reset()
                 done = False
                 episode_reward = 0
+                episode_cost = 0
                 episode_step = 0
                 episode += 1
 
@@ -114,14 +131,15 @@ class Workspace(object):
             if self.step >= self.cfg.num_seed_steps:
                 self.agent.update(self.replay_buffer, self.logger, self.step)
 
-            next_obs, reward, done, _ = self.env.step(action)
-
+            next_obs, reward, done, info = self.env.step(action)
+            cost = info.get('cost', 0)
             # allow infinite bootstrap
             done = float(done)
             done_no_max = 0 if episode_step + 1 == self.env.num_steps else done
             episode_reward += reward
+            episode_cost += cost
 
-            self.replay_buffer.add(obs, action, reward, next_obs, done,
+            self.replay_buffer.add(obs, action, reward, cost, next_obs, done,
                                    done_no_max)
 
             obs = next_obs
