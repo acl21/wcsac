@@ -1,7 +1,7 @@
 defaults:
-    - agent: sac
+    - agent: wcsac
 
-env: cheetah_run
+env: 'point_goal_1'
 
 # this needs to be specified manually
 experiment: test_exp

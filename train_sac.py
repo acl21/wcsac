@@ -32,8 +32,8 @@ class Workspace(object):
 
         utils.set_seed_everywhere(cfg.seed)
         self.device = torch.device(cfg.device)
-        # self.env = utils.make_env(cfg)
-        self.env = utils.make_safety_env(cfg)
+        self.env = utils.make_env(cfg)
+        # self.env = utils.make_safety_env(cfg)
 
         cfg.agent.params.obs_dim = int(self.env.observation_space.shape[0])
         cfg.agent.params.action_dim = int(self.env.action_space.shape[0])

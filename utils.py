@@ -10,6 +10,9 @@ import random
 import math
 
 import dmc2gym
+import safety_gym
+from safety_gym.envs.engine import Engine
+from gym.envs.registration import register
 
 
 def make_env(cfg):
@@ -31,6 +34,69 @@ def make_env(cfg):
 
     return env
 
+
+def make_safety_env(cfg):
+    """Helper function to create safety environment"""
+    if 'custom' in cfg.env:
+        return make_custom_env(cfg) 
+    env_split = cfg.env.split('_')
+    env_name = f'Safexp-{env_split[0].capitalize()}{env_split[1].capitalize()}{env_split[-1]}-v0'
+
+    env = gym.make(env_name)
+    env.seed(cfg.seed)
+
+    assert env.action_space.low.min() >= -1
+    assert env.action_space.high.max() <= 1
+
+    return env
+
+
+def make_custom_env(cfg):
+    """Custom environments used in the paper (taken from the official implementation)"""
+    if 'static' in cfg.env:
+        config1 = {
+            'placements_extents': [-1.5, -1.5, 1.5, 1.5],
+            'robot_base': 'xmls/point.xml',
+            'task': 'goal',
+            'goal_size': 0.3,
+            'goal_keepout': 0.305,
+            'goal_locations': [(1.1, 1.1)],
+            'observe_goal_lidar': True,
+            'observe_hazards': True,
+            'constrain_hazards': True,
+            'lidar_max_dist': 3,
+            'lidar_num_bins': 16,
+            'hazards_num': 1,
+            'hazards_size': 0.7,
+            'hazards_keepout': 0.705,
+            'hazards_locations': [(0, 0)]
+            }
+        register(id='StaticEnv-v0',
+                entry_point='safety_gym.envs.mujoco:Engine',
+                kwargs={'config': config1})
+        env = gym.make('StaticEnv-v0')
+    else:
+        config2 = {
+        'placements_extents': [-1.5, -1.5, 1.5, 1.5],
+        'robot_base': 'xmls/point.xml',
+        'task': 'goal',
+        'goal_size': 0.3,
+        'goal_keepout': 0.305,
+        'observe_goal_lidar': True,
+        'observe_hazards': True,
+        'constrain_hazards': True,
+        'lidar_max_dist': 3,
+        'lidar_num_bins': 16,
+        'hazards_num': 3,
+        'hazards_size': 0.3,
+        'hazards_keepout': 0.305
+        }
+        register(id='DynamicEnv-v0',
+                entry_point='safety_gym.envs.mujoco:Engine',
+                kwargs={'config': config2})
+        env = gym.make('DynamicEnv-v0')
+
+    return env
 
 class eval_mode(object):
     def __init__(self, *models):
