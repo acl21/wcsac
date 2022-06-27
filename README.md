@@ -1,11 +1,11 @@
 # Worst-Case Soft Actor-Critic (WCSAC) implementation in PyTorch
 
-This is PyTorch implementation of Worst-Case Soft Actor-Critic (WCSAC) [[Page]](https://ojs.aaai.org/index.php/AAAI/article/view/17272) [[PDF]](https://www.st.ewi.tudelft.nl/mtjspaan/pub/Yang21aaai.pdf). This repository is built on top [PyTorch SAC](https://github.com/denisyarats/pytorch_sac) by Denis Yarats and Ilya Kostrikov.
+This is PyTorch implementation of Worst-Case Soft Actor-Critic (WCSAC) [[Page]](https://ojs.aaai.org/index.php/AAAI/article/view/17272) [[PDF]](https://www.st.ewi.tudelft.nl/mtjspaan/pub/Yang21aaai.pdf). This repository is built on top [PyTorch SAC](https://github.com/denisyarats/pytorch_sac) by Denis Yarats and Ilya Kostrikov. You can find the official implementation in TensorFlow [here](https://github.com/AlgTUDelft/WCSAC).
 
 If you use this code in your research project please cite us and the original authors as:
 ```
 @misc{pytorch_wcsac,
-  author = {Pfrang, Luca and Chandra, Akshay L and Koribille, Sri Harsha},
+  author = {Pfrang, Luca and Chandra, Akshay L and Koribille, Sri Harsha and Zhang, Baohe},
   title = {Worst-Case Soft Actor-Critic (WCSAC) implementation in PyTorch},
   year = {2022},
   publisher = {GitHub},
@@ -24,16 +24,12 @@ If you use this code in your research project please cite us and the original au
 ```
 
 ## Requirements
-We assume you have access to a gpu that can run CUDA 9.2. Then, the simplest way to install all required dependencies is to create an anaconda environment and activate it:
-```
-conda env create -f conda_env.yml
-source activate pytorch_wcsac
-```
+TBA
 
 ## Instructions
 To train an SAC agent on the `Safexp-PointGoal1-v0` task from [Safety Gym](https://openai.com/blog/safety-gym/) run:
 ```
-python train.py env=pointgoal1
+python train.py env=point_goal_1
 ```
 This will produce `exp` folder, where all the outputs are going to be stored including train/eval logs, tensorboard blobs, and evaluation episode videos. One can attacha tensorboard to monitor training by running:
 ```
