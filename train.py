@@ -55,7 +55,7 @@ class Workspace(object):
     def evaluate(self):
         average_episode_reward = 0
         average_episode_cost = 0
-        average_episode_goals_met = 0
+        average_episode_goals_met = 0  # TODO: What are average episode goals ???
         for episode in range(self.cfg.num_eval_episodes):
             obs = self.env.reset()
             self.agent.reset()
@@ -63,7 +63,7 @@ class Workspace(object):
             done = False
             episode_reward = 0
             episode_cost = 0
-            episode_goals_met = 0
+            episode_goals_met = 0  # TODO: What is episode_goals_met ???
             while not done:
                 with utils.eval_mode(self.agent):
                     action = self.agent.act(obs, sample=False)

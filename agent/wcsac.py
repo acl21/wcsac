@@ -33,11 +33,11 @@ class WCSACAgent(Agent):
 
         # Safety related params
         self.max_episode_len = max_episode_len
-        self.cost_limit = cost_limit # di in Eq. 10
-        self.risk_level = risk_level # alpha in Eq. 9
+        self.cost_limit = cost_limit  # d in Eq. 10
+        self.risk_level = risk_level  # alpha in Eq. 9 / risk averse = 0, risk neutral = 1
         normal = tdist.normal.Normal(torch.tensor([0.0]), torch.tensor([1.0]))
-        self.pdf_cdf = self.risk_level**(-1)*(normal.log_prob(normal.icdf(torch.tensor(self.risk_level))).exp())
-        self.damp_scale = 0 # SHOULD NOT BE ZERO, NOT SURE HOW THEY SET IT (DEFAULT WAS 0 WHICH IS NOT GOOD)
+        self.pdf_cdf = normal.log_prob(normal.icdf(torch.tensor(self.risk_level))).exp() / self.risk_level  # precompute CVaR Value for st. normal distribution
+        self.damp_scale = 0  # scale for damping the impact of the safety constraint in the actor update / 0 = NOT USED
 
         # Reward critic
         self.critic = hydra.utils.instantiate(critic_cfg).to(self.device)
@@ -64,7 +64,7 @@ class WCSACAgent(Agent):
         self.target_entropy = -action_dim
 
         # Set target cost
-        self.target_cost = self.cost_limit * (1 - self.discount ** self.max_episode_len) / (1 - self.discount) / self.max_episode_len
+        self.target_cost = self.cost_limit * (1 - self.discount**self.max_episode_len) / (1 - self.discount) / self.max_episode_len
 
         # Optimizers
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(),
@@ -113,7 +113,7 @@ class WCSACAgent(Agent):
         return utils.to_np(action[0])
 
     def update_critic(self, obs, action, reward, cost, next_obs, not_done, logger, step):
-        # Get next_action from pi(*|next_obs)
+        # Get next action from current pi_theta(*|next_obs)
         dist = self.actor(next_obs)
         next_action = dist.rsample()
         log_prob = dist.log_prob(next_action).sum(-1, keepdim=True)
@@ -126,25 +126,26 @@ class WCSACAgent(Agent):
 
         # QC, VC targets
         # use next_action as an approximation
-        current_QC, current_VC = self.safety_critic(obs, action)  # TODO: Disable gradients
-        ns_QC, ns_VC = self.safety_critic_target(next_obs, next_action)
+        current_QC, current_VC = self.safety_critic(obs, action)
+        ns_QC, ns_VC = self.safety_critic_target(next_obs, next_action)  # ns_QC, ns_QV from target network
         target_QC = cost + (not_done * self.discount * ns_QC)
         target_VC = cost**2 - current_QC**2 + 2 * self.discount * cost * ns_QC +\
-            self.discount**2 * ns_VC + self.discount**2 * ns_QC # Eq. 8 in the paper 
+            self.discount**2 * ns_VC + self.discount**2 * ns_QC**2  # Eq. 8 in the paper 
         target_QC = target_QC.detach()
         target_VC = target_VC.detach()
 
+        # Critic Loss
         # get current Q estimates
         current_Q1, current_Q2 = self.critic(obs, action)
         critic_loss = F.mse_loss(current_Q1, target_Q) + F.mse_loss(current_Q2, target_Q)
         logger.log('train_critic/loss', critic_loss, step)
 
-        # get current QC, VC estimates
+        # Safety Critic Loss
         safety_critic_loss = F.mse_loss(current_QC, target_QC) +\
-            torch.mean(current_VC + target_VC - 2 * ((current_VC * target_VC)**0.5))
-        logger.log('train_safety_critic/loss', safety_critic_loss, step) 
+            torch.mean(current_VC + target_VC - 2 * torch.sqrt(current_VC * target_VC))
+        logger.log('train_safety_critic/loss', safety_critic_loss, step)
 
-        # Qptimize Reward and Safety Critics together
+        # Jointly optimize Reward and Safety Critics
         total_loss = critic_loss + safety_critic_loss
         self.all_critics_optimizer.zero_grad()
         total_loss.backward()
@@ -153,43 +154,51 @@ class WCSACAgent(Agent):
         self.critic.log(logger, step)
         self.safety_critic.log(logger, step)
         
-    def update_actor_and_alpha_and_beta(self, obs, action_taken, logger, step):
+    def update_actor_and_alpha_and_beta(self, obs, logger, step):
+        # Get updated action from current pi_theta(*|obs)
         dist = self.actor(obs)
-        action = dist.rsample()
+        action = dist.rsample()  # uses reparametrization trick
         log_prob = dist.log_prob(action).sum(-1, keepdim=True)
+        
+        # Reward Critic
         actor_Q1, actor_Q2 = self.critic(obs, action)
-        actor_QC, actor_VC = self.safety_critic(obs, action)
-        current_QC, current_VC = self.safety_critic(obs, action_taken)
-
         actor_Q = torch.min(actor_Q1, actor_Q2)
-        cv = current_QC + self.pdf_cdf * current_VC**(0.5) # Eq. 9 in the paper
-        damp = self.damp_scale * (self.target_cost - cv).mean()
+        
+        # Safety Critic + CVaR
+        actor_QC, actor_VC = self.safety_critic(obs, action)
+        cvar = actor_QC + self.pdf_cdf * torch.sqrt(actor_VC)  # Eq. 9 in the paper
+        
+        # Damp impact of safety constraint in actor update / not used if damp_scale = 0
+        damp = self.damp_scale * torch.mean(self.target_cost - cvar)
 
-        actor_loss = (self.alpha.detach() * log_prob - actor_Q + (self.beta.detach() - damp) * (actor_QC + self.pdf_cdf * actor_VC**(0.5))).mean()
+        # Actor Loss
+        alpha = self.alpha.detach()  # entropy temperature
+        beta = self.beta.detach()  # safety temperature
+        actor_loss = torch.mean(alpha * log_prob - actor_Q + (beta - damp) * (actor_QC + self.pdf_cdf * torch.sqrt(actor_VC)))
 
         logger.log('train_actor/loss', actor_loss, step)
         logger.log('train_actor/target_entropy', self.target_entropy, step)
         logger.log('train_actor/entropy', -log_prob.mean(), step)
         logger.log('train_actor/target_cost', self.target_cost, step)
-        logger.log('train_actor/cost', cv.mean(), step)
+        logger.log('train_actor/cost', cvar.mean(), step)
 
-        # optimize the actor
+        # Optimize the actor
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()
 
         self.actor.log(logger, step)
 
-        if self.learnable_temperature:
+        if self.learnable_temperature:  # TODO: Add implementation variant where one can choose fix entropy + fixed costs
             self.log_alpha_optimizer.zero_grad()
-            alpha_loss = (self.alpha * (-log_prob - self.target_entropy).detach()).mean()
+            alpha_loss = torch.mean(self.alpha * (-log_prob - self.target_entropy).detach())
             logger.log('train_alpha/loss', alpha_loss, step)
             logger.log('train_alpha/value', self.alpha, step)
             alpha_loss.backward()
             self.log_alpha_optimizer.step()
-
+            
             self.log_beta_optimizer.zero_grad()
-            beta_loss = (self.beta * (self.target_cost - cv).detach()).mean()
+            beta_loss = torch.mean(self.beta * (self.target_cost - cvar).detach())
             logger.log('train_beta/loss', beta_loss, step)
             logger.log('train_beta/value', self.beta, step)
             beta_loss.backward()
@@ -199,13 +208,14 @@ class WCSACAgent(Agent):
         obs, action, reward, cost, next_obs, not_done, not_done_no_max = replay_buffer.sample(self.batch_size)
 
         logger.log('train/batch_reward', reward.mean(), step)
-
+        logger.log('train/batch_cost', cost.mean(), step)
+        
         self.update_critic(obs, action, reward, cost, next_obs, not_done_no_max,
                            logger, step)
 
         if step % self.actor_update_frequency == 0:
-            self.update_actor_and_alpha_and_beta(obs, action, logger, step)
+            self.update_actor_and_alpha_and_beta(obs, logger, step)
 
         if step % self.critic_target_update_frequency == 0:
-            utils.soft_update_params(self.critic, self.critic_target,
-                                     self.critic_tau)
+            utils.soft_update_params(self.critic, self.critic_target, self.critic_tau)
+            utils.soft_update_params(self.safety_critic, self.safety_critic_target, self.critic_tau)
