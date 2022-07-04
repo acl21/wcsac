@@ -154,19 +154,20 @@ class WCSACAgent(Agent):
         self.critic.log(logger, step)
         self.safety_critic.log(logger, step)
         
-    def update_actor_and_alpha_and_beta(self, obs, logger, step):
+    def update_actor_and_alpha_and_beta(self, obs, action_taken, logger, step):
         # Get updated action from current pi_theta(*|obs)
         dist = self.actor(obs)
         action = dist.rsample()  # uses reparametrization trick
         log_prob = dist.log_prob(action).sum(-1, keepdim=True)
-        
+
         # Reward Critic
         actor_Q1, actor_Q2 = self.critic(obs, action)
         actor_Q = torch.min(actor_Q1, actor_Q2)
-        
-        # Safety Critic + CVaR
         actor_QC, actor_VC = self.safety_critic(obs, action)
-        cvar = actor_QC + self.pdf_cdf * torch.sqrt(actor_VC)  # Eq. 9 in the paper
+
+        # Safety Critic + CVaR
+        current_QC, current_VC = self.safety_critic(obs, action_taken)
+        cvar = current_QC + self.pdf_cdf.cuda() * torch.sqrt(current_VC)  # Eq. 9 in the paper
         
         # Damp impact of safety constraint in actor update / not used if damp_scale = 0
         damp = self.damp_scale * torch.mean(self.target_cost - cvar)
@@ -174,7 +175,7 @@ class WCSACAgent(Agent):
         # Actor Loss
         alpha = self.alpha.detach()  # entropy temperature
         beta = self.beta.detach()  # safety temperature
-        actor_loss = torch.mean(alpha * log_prob - actor_Q + (beta - damp) * (actor_QC + self.pdf_cdf * torch.sqrt(actor_VC)))
+        actor_loss = torch.mean(alpha * log_prob - actor_Q + (beta - damp) * (actor_QC + self.pdf_cdf.cuda() * torch.sqrt(actor_VC)))
 
         logger.log('train_actor/loss', actor_loss, step)
         logger.log('train_actor/target_entropy', self.target_entropy, step)
@@ -214,7 +215,7 @@ class WCSACAgent(Agent):
                            logger, step)
 
         if step % self.actor_update_frequency == 0:
-            self.update_actor_and_alpha_and_beta(obs, logger, step)
+            self.update_actor_and_alpha_and_beta(obs, action, logger, step)
 
         if step % self.critic_target_update_frequency == 0:
             utils.soft_update_params(self.critic, self.critic_target, self.critic_tau)
