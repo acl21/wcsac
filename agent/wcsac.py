@@ -37,6 +37,7 @@ class WCSACAgent(Agent):
         self.risk_level = risk_level  # alpha in Eq. 9 / risk averse = 0, risk neutral = 1
         normal = tdist.normal.Normal(torch.tensor([0.0]), torch.tensor([1.0]))
         self.pdf_cdf = normal.log_prob(normal.icdf(torch.tensor(self.risk_level))).exp() / self.risk_level  # precompute CVaR Value for st. normal distribution
+        self.pdf_cdf = self.pdf_cdf.cuda()
         self.damp_scale = 0  # scale for damping the impact of the safety constraint in the actor update / 0 = NOT USED
 
         # Reward critic
@@ -122,22 +123,22 @@ class WCSACAgent(Agent):
         target_Q1, target_Q2 = self.critic_target(next_obs, next_action)
         target_V = torch.min(target_Q1, target_Q2) - self.alpha.detach() * log_prob
         target_Q = reward + (not_done * self.discount * target_V)
-        target_Q = torch.clamp(target_Q.detach(), min=1e-8, max=1e-8)
+        target_Q = torch.clamp(target_Q.detach(), min=1e-8, max=1e8)
 
         # QC, VC targets
         # use next_action as an approximation
         current_QC, current_VC = self.safety_critic(obs, action)
         ns_QC, ns_VC = self.safety_critic_target(next_obs, next_action)  # ns_QC, ns_QV from target network
-        current_QC = torch.clamp(current_QC.detach(), min=1e-8, max=1e-8)
-        current_VC = torch.clamp(current_VC.detach(), min=1e-8, max=1e-8)
-        ns_QC = torch.clamp(ns_QC.detach(), min=1e-8, max=1e-8)
-        ns_VC = torch.clamp(ns_VC.detach(), min=1e-8, max=1e-8)
+        current_QC = current_QC.detach()
+        current_VC = torch.clamp(current_VC.detach(), min=1e-8, max=1e8)
+        ns_QC = ns_QC.detach()
+        ns_VC = torch.clamp(ns_VC.detach(), min=1e-8, max=1e8)
 
         target_QC = cost + (not_done * self.discount * ns_QC)
         target_VC = cost**2 - current_QC**2 + 2 * self.discount * cost * ns_QC +\
             self.discount**2 * ns_VC + self.discount**2 * ns_QC**2  # Eq. 8 in the paper 
-        target_QC = torch.clamp(target_QC.detach(), min=1e-8, max=1e-8)
-        target_VC = torch.clamp(target_VC.detach(), min=1e-8, max=1e-8)
+        target_QC = target_QC.detach()
+        target_VC = torch.clamp(target_VC.detach(), min=1e-8, max=1e8)
 
         # Critic Loss
         # get current Q estimates
@@ -169,24 +170,27 @@ class WCSACAgent(Agent):
         actor_Q1, actor_Q2 = self.critic(obs, action)
         actor_Q = torch.min(actor_Q1, actor_Q2)
         actor_QC, actor_VC = self.safety_critic(obs, action)
+        actor_VC = torch.clamp(actor_VC.detach(), min=1e-8, max=1e8)
 
         # Safety Critic + CVaR
         current_QC, current_VC = self.safety_critic(obs, action_taken)
+        current_VC = torch.clamp(current_VC.detach(), min=1e-8, max=1e8)
         cvar = current_QC + self.pdf_cdf.cuda() * torch.sqrt(current_VC)  # Eq. 9 in the paper
-        
+
         # Damp impact of safety constraint in actor update / not used if damp_scale = 0
         damp = self.damp_scale * torch.mean(self.target_cost - cvar)
 
         # Actor Loss
-        alpha = torch.clamp(self.alpha.detach(), min=1e-8, max=1e-8)  # entropy temperature
-        beta = torch.clamp(self.beta.detach(), min=1e-8, max=1e-8)  # safety temperature
+        alpha = torch.clamp(self.alpha.detach(), min=1e-8, max=1e8)  # entropy temperature
+        beta = torch.clamp(self.beta.detach(), min=1e-8, max=1e8)
+        alpha = self.alpha.detach()
+        beta = self.beta.detach()  # safety temperature
+
         actor_loss = torch.mean(alpha * log_prob - actor_Q + (beta - damp) * (actor_QC + self.pdf_cdf.cuda() * torch.sqrt(actor_VC)))
 
         logger.log('train_actor/loss', actor_loss, step)
-        logger.log('train_actor/target_entropy', self.target_entropy, step)
-        logger.log('train_actor/entropy', -log_prob.mean(), step)
-        logger.log('train_actor/target_cost', self.target_cost, step)
-        logger.log('train_actor/cost', cvar.mean(), step)
+        logger.log('train_actor/actor_entropy', -log_prob.mean(), step)
+        logger.log('train_actor/actor_cost', cvar.mean(), step)
 
         # Optimize the actor
         self.actor_optimizer.zero_grad()

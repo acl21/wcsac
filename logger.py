@@ -42,9 +42,9 @@ AGENT_TRAIN_FORMAT = {
         ('alpha_loss', 'TLOSS', 'float'),
         ('alpha_value', 'TVAL', 'float'),
         ('actor_entropy', 'AENT', 'float'),
-        ('beta_loss', 'BLOSS', 'float'),
-        ('beta_value', 'BVAL', 'float'),
         ('actor_cost', 'ACOST', 'float'),
+        ('beta_loss', 'BLOSS', 'float'),
+        ('beta_value', 'BVAL', 'float')
     ]
 }
 
