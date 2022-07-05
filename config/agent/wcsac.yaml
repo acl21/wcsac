@@ -24,14 +24,14 @@ agent:
     learnable_temperature: true
     cost_limit: 15
     max_episode_len: 1000
-    risk_level: 0.5
+    risk_level: ${risk_level}
 
 double_q_critic:
   class: agent.critic.DoubleQCritic
   params:
     obs_dim: ${agent.params.obs_dim}
     action_dim: ${agent.params.action_dim}
-    hidden_dim: 1024
+    hidden_dim: 64
     hidden_depth: 2
 
 safety_critic:
@@ -39,7 +39,7 @@ safety_critic:
   params:
     obs_dim: ${agent.params.obs_dim}
     action_dim: ${agent.params.action_dim}
-    hidden_dim: 1024
+    hidden_dim: 64
     hidden_depth: 2
 
 diag_gaussian_actor:
@@ -48,5 +48,5 @@ diag_gaussian_actor:
     obs_dim: ${agent.params.obs_dim}
     action_dim: ${agent.params.action_dim}
     hidden_depth: 2
-    hidden_dim: 1024
+    hidden_dim: 64
     log_std_bounds: [-20, 2]

@@ -12,7 +12,7 @@ COMMON_TRAIN_FORMAT = [
     ('episode', 'E', 'int'),
     ('step', 'S', 'int'),
     ('episode_reward', 'R', 'float'),
-    ('episode_cost', 'C', 'float'),  # TODO: verify this is working - (for wcsac and sac)
+    ('episode_cost', 'C', 'float'),
     ('duration', 'D', 'time') 
 ]
 
@@ -20,14 +20,14 @@ COMMON_EVAL_FORMAT = [
     ('episode', 'E', 'int'),
     ('step', 'S', 'int'),
     ('episode_reward', 'R', 'float'),
-    ('episode_cost', 'C', 'float')  # TODO: verify this is working - (for wcsac and sac)
+    ('episode_cost', 'C', 'float'),
+    ('episode_goals_met', 'G', 'float')
 ]
 
 
 AGENT_TRAIN_FORMAT = {
     'sac': [
         ('batch_reward', 'BR', 'float'),
-        # ('batch_cost', 'BC', 'float'),  # TODO: decide if we want to log this in SAC -> we will always incur cost since we use safety gym, but we won't use them to make updates in SAC
         ('actor_loss', 'ALOSS', 'float'),
         ('critic_loss', 'CLOSS', 'float'),
         ('alpha_loss', 'TLOSS', 'float'),
@@ -36,15 +36,16 @@ AGENT_TRAIN_FORMAT = {
     ],
     'wcsac': [
         ('batch_reward', 'BR', 'float'),
-        ('batch_cost', 'BC', 'float'),  # TODO: verify this is working
+        ('batch_cost', 'BC', 'float'),
         ('actor_loss', 'ALOSS', 'float'),
         ('critic_loss', 'CLOSS', 'float'),
-        ('alpha_loss', 'TLOSS', 'float'),
-        ('alpha_value', 'TVAL', 'float'),
+        ('safety_critic_loss', 'SCLOSS', 'float'),
+        ('alpha_loss', 'ALPLOSS', 'float'),
+        ('alpha_value', 'ALPVAL', 'float'),
         ('actor_entropy', 'AENT', 'float'),
         ('actor_cost', 'ACOST', 'float'),
-        ('beta_loss', 'BLOSS', 'float'),
-        ('beta_value', 'BVAL', 'float')
+        ('beta_loss', 'BETLOSS', 'float'),
+        ('beta_value', 'BETVAL', 'float')
     ]
 }
 

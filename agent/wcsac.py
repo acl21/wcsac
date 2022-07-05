@@ -144,12 +144,12 @@ class WCSACAgent(Agent):
         # get current Q estimates
         current_Q1, current_Q2 = self.critic(obs, action)
         critic_loss = F.mse_loss(current_Q1, target_Q) + F.mse_loss(current_Q2, target_Q)
-        logger.log('train_critic/loss', critic_loss, step)
+        logger.log('train/critic_loss', critic_loss, step)
 
         # Safety Critic Loss
         safety_critic_loss = F.mse_loss(current_QC, target_QC) +\
             torch.mean(current_VC + target_VC - 2 * torch.sqrt(current_VC * target_VC))
-        logger.log('train_safety_critic/loss', safety_critic_loss, step)
+        logger.log('train/safety_critic_loss', safety_critic_loss, step)
 
         # Jointly optimize Reward and Safety Critics
         total_loss = critic_loss + safety_critic_loss
@@ -188,9 +188,9 @@ class WCSACAgent(Agent):
 
         actor_loss = torch.mean(alpha * log_prob - actor_Q + (beta - damp) * (actor_QC + self.pdf_cdf.cuda() * torch.sqrt(actor_VC)))
 
-        logger.log('train_actor/loss', actor_loss, step)
-        logger.log('train_actor/actor_entropy', -log_prob.mean(), step)
-        logger.log('train_actor/actor_cost', cvar.mean(), step)
+        logger.log('train/actor_loss', actor_loss, step)
+        logger.log('train/actor_entropy', -log_prob.mean(), step)
+        logger.log('train/actor_cost', torch.mean(actor_QC + self.pdf_cdf.cuda() * torch.sqrt(actor_VC)), step)
 
         # Optimize the actor
         self.actor_optimizer.zero_grad()
@@ -202,15 +202,15 @@ class WCSACAgent(Agent):
         if self.learnable_temperature:  # TODO: Add implementation variant where one can choose fix entropy + fixed costs
             self.log_alpha_optimizer.zero_grad()
             alpha_loss = torch.mean(self.alpha * (-log_prob - self.target_entropy).detach())
-            logger.log('train_alpha/loss', alpha_loss, step)
-            logger.log('train_alpha/value', self.alpha, step)
+            logger.log('train/alpha_loss', alpha_loss, step)
+            logger.log('train/alpha_value', self.alpha, step)
             alpha_loss.backward()
             self.log_alpha_optimizer.step()
             
             self.log_beta_optimizer.zero_grad()
             beta_loss = torch.mean(self.beta * (self.target_cost - cvar).detach())
-            logger.log('train_beta/loss', beta_loss, step)
-            logger.log('train_beta/value', self.beta, step)
+            logger.log('train/beta_loss', beta_loss, step)
+            logger.log('train/beta_value', self.beta, step)
             beta_loss.backward()
             self.log_beta_optimizer.step()
 

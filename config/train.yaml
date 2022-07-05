@@ -26,7 +26,8 @@ log_save_tb: true
 save_video: true
 
 
-seed: 1
+seed: -1
+risk_level: 2
 
 
 # hydra configuration

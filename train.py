@@ -30,6 +30,8 @@ class Workspace(object):
                              log_frequency=cfg.log_frequency,
                              agent=cfg.agent.name)
 
+        assert 1>= cfg.risk_level >= 0, f"risk_level must be between 0 and 1 (inclusive), got: {cfg.risk_level}"
+        assert cfg.seed != -1, f"seed must be provided, got default seed: {cfg.seed}"
         utils.set_seed_everywhere(cfg.seed)
         self.device = torch.device(cfg.device)
         # self.env = utils.make_env(cfg)
