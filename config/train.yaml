@@ -1,8 +1,8 @@
 defaults:
     - agent: wcsac
 
-# env: 'point_goal_1'
-env: 'cheetah_run'
+env: 'point_goal_1'
+# env: 'cheetah_run'
 # env: 'static'
 
 # this needs to be specified manually
