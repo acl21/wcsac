@@ -34,6 +34,12 @@ class Workspace(object):
         self.device = torch.device(cfg.device)
         self.env = utils.make_env(cfg)
         # self.env = utils.make_safety_env(cfg)
+        # self.env = utils.make_custom_env(cfg)
+
+        if "run" in cfg.env:
+            self.env_max_steps = self.env._max_episode_steps
+        else:
+            self.env_max_steps = self.env.num_steps
 
         cfg.agent.params.obs_dim = int(self.env.observation_space.shape[0])
         cfg.agent.params.action_dim = int(self.env.action_space.shape[0])
@@ -108,6 +114,7 @@ class Workspace(object):
                 action = self.env.action_space.sample()
             else:
                 with utils.eval_mode(self.agent):
+                    print('INSIDE EVAL')
                     action = self.agent.act(obs, sample=True)
 
             # run training update
@@ -118,10 +125,10 @@ class Workspace(object):
 
             # allow infinite bootstrap
             done = float(done)
-            done_no_max = 0 if episode_step + 1 == self.env.num_steps else done
+            done_no_max = 0 if episode_step + 1 == self.env_max_steps else done
             episode_reward += reward
 
-            self.replay_buffer.add(obs, action, reward, next_obs, done,
+            self.replay_buffer.add(obs, action, reward, 1, next_obs, done,
                                    done_no_max)
 
             obs = next_obs

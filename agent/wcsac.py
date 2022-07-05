@@ -122,17 +122,22 @@ class WCSACAgent(Agent):
         target_Q1, target_Q2 = self.critic_target(next_obs, next_action)
         target_V = torch.min(target_Q1, target_Q2) - self.alpha.detach() * log_prob
         target_Q = reward + (not_done * self.discount * target_V)
-        target_Q = target_Q.detach()
+        target_Q = torch.clamp(target_Q.detach(), min=1e-8, max=1e-8)
 
         # QC, VC targets
         # use next_action as an approximation
         current_QC, current_VC = self.safety_critic(obs, action)
         ns_QC, ns_VC = self.safety_critic_target(next_obs, next_action)  # ns_QC, ns_QV from target network
+        current_QC = torch.clamp(current_QC.detach(), min=1e-8, max=1e-8)
+        current_VC = torch.clamp(current_VC.detach(), min=1e-8, max=1e-8)
+        ns_QC = torch.clamp(ns_QC.detach(), min=1e-8, max=1e-8)
+        ns_VC = torch.clamp(ns_VC.detach(), min=1e-8, max=1e-8)
+
         target_QC = cost + (not_done * self.discount * ns_QC)
         target_VC = cost**2 - current_QC**2 + 2 * self.discount * cost * ns_QC +\
             self.discount**2 * ns_VC + self.discount**2 * ns_QC**2  # Eq. 8 in the paper 
-        target_QC = target_QC.detach()
-        target_VC = target_VC.detach()
+        target_QC = torch.clamp(target_QC.detach(), min=1e-8, max=1e-8)
+        target_VC = torch.clamp(target_VC.detach(), min=1e-8, max=1e-8)
 
         # Critic Loss
         # get current Q estimates
@@ -173,8 +178,8 @@ class WCSACAgent(Agent):
         damp = self.damp_scale * torch.mean(self.target_cost - cvar)
 
         # Actor Loss
-        alpha = self.alpha.detach()  # entropy temperature
-        beta = self.beta.detach()  # safety temperature
+        alpha = torch.clamp(self.alpha.detach(), min=1e-8, max=1e-8)  # entropy temperature
+        beta = torch.clamp(self.beta.detach(), min=1e-8, max=1e-8)  # safety temperature
         actor_loss = torch.mean(alpha * log_prob - actor_Q + (beta - damp) * (actor_QC + self.pdf_cdf.cuda() * torch.sqrt(actor_VC)))
 
         logger.log('train_actor/loss', actor_loss, step)

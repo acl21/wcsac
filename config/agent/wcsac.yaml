@@ -49,4 +49,4 @@ diag_gaussian_actor:
     action_dim: ${agent.params.action_dim}
     hidden_depth: 2
     hidden_dim: 64
-    log_std_bounds: [-5, 2]
+    log_std_bounds: [-20, 2]

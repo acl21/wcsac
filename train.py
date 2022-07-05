@@ -33,7 +33,8 @@ class Workspace(object):
         utils.set_seed_everywhere(cfg.seed)
         self.device = torch.device(cfg.device)
         # self.env = utils.make_env(cfg)
-        self.env = utils.make_safety_env(cfg)
+        # self.env = utils.make_safety_env(cfg)
+        self.env = utils.make_custom_env(cfg)
 
         cfg.agent.params.obs_dim = int(self.env.observation_space.shape[0])
         cfg.agent.params.action_dim = int(self.env.action_space.shape[0])
@@ -55,7 +56,7 @@ class Workspace(object):
     def evaluate(self):
         average_episode_reward = 0
         average_episode_cost = 0
-        average_episode_goals_met = 0  # TODO: What are average episode goals ???
+        average_episode_goals_met = 0
         for episode in range(self.cfg.num_eval_episodes):
             obs = self.env.reset()
             self.agent.reset()
@@ -63,7 +64,7 @@ class Workspace(object):
             done = False
             episode_reward = 0
             episode_cost = 0
-            episode_goals_met = 0  # TODO: What is episode_goals_met ???
+            episode_goals_met = 0
             while not done:
                 with utils.eval_mode(self.agent):
                     action = self.agent.act(obs, sample=False)
