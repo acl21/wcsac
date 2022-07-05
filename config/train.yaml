@@ -8,18 +8,18 @@ env: 'point_goal_1'
 # this needs to be specified manually
 experiment: exp
 
-num_train_steps: 1e5
-replay_buffer_capacity: 1e5
+num_train_steps: 1e6
+replay_buffer_capacity: 1e6
 
-num_seed_steps: 1e3
+num_seed_steps: 5000
 
-eval_frequency: 5000
+eval_frequency: 10000
 num_eval_episodes: 10
 
 device: cuda
 
 # logger
-log_frequency: 3000
+log_frequency: 10000
 log_save_tb: true
 
 # video recorder
