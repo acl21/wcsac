@@ -3,7 +3,8 @@ defaults:
 
 env: 'point_goal_1'
 # env: 'cheetah_run'
-# env: 'static'
+# env: 'custom_static'
+# env: 'custom_dynamic'
 
 # this needs to be specified manually
 experiment: exp

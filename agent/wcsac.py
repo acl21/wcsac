@@ -134,8 +134,8 @@ class WCSACAgent(Agent):
 
         # QC, VC targets
         # use next_action as an approximation
-        next_QC, next_VC = self.safety_critic_target(next_obs, next_action)  # ns_QC, ns_QV from target network
-        next_VC = torch.clamp(next_VC.detach(), min=1e-8, max=1e8)
+        next_QC, next_VC = self.safety_critic_target(next_obs, next_action)
+        next_VC = torch.clamp(next_VC, min=1e-8, max=1e8)
 
         target_QC = cost + (not_done * self.discount * next_QC)
         target_VC = cost**2 - current_QC**2 + 2 * self.discount * cost * next_QC +\
