@@ -54,11 +54,11 @@ class WCSACAgent(Agent):
         self.actor = hydra.utils.instantiate(actor_cfg).to(self.device)
 
         # Entropy temperature (beta in the paper)
-        self.log_alpha = torch.tensor(np.log(init_temperature)).to(self.device)
+        self.log_alpha = torch.tensor(np.log(np.clip(init_temperature, 1e-8, 1e8))).to(self.device)
         self.log_alpha.requires_grad = True
 
         # Cost temperature (kappa in the paper)
-        self.log_beta = torch.tensor(np.log(init_temperature)).to(self.device)
+        self.log_beta = torch.tensor(np.log(np.clip(init_temperature, 1e-8, 1e8))).to(self.device)
         self.log_beta.requires_grad = True
 
         # Set target entropy to -|A|
@@ -119,30 +119,31 @@ class WCSACAgent(Agent):
         next_action = dist.rsample()
         log_prob = dist.log_prob(next_action).sum(-1, keepdim=True)
 
+        # get current Q estimates
+        current_Q1, current_Q2 = self.critic(obs, action)
+
         # Q1, Q2 targets
         target_Q1, target_Q2 = self.critic_target(next_obs, next_action)
         target_V = torch.min(target_Q1, target_Q2) - self.alpha.detach() * log_prob
         target_Q = reward + (not_done * self.discount * target_V)
-        target_Q = torch.clamp(target_Q.detach(), min=1e-8, max=1e8)
+        target_Q = target_Q.detach()
+
+        # Current QC and VC estimates
+        current_QC, current_VC = self.safety_critic(obs, action)
+        current_VC = torch.clamp(current_VC, min=1e-8, max=1e8)
 
         # QC, VC targets
         # use next_action as an approximation
-        current_QC, current_VC = self.safety_critic(obs, action)
-        ns_QC, ns_VC = self.safety_critic_target(next_obs, next_action)  # ns_QC, ns_QV from target network
-        current_QC = current_QC.detach()
-        current_VC = torch.clamp(current_VC.detach(), min=1e-8, max=1e8)
-        ns_QC = ns_QC.detach()
-        ns_VC = torch.clamp(ns_VC.detach(), min=1e-8, max=1e8)
+        next_QC, next_VC = self.safety_critic_target(next_obs, next_action)  # ns_QC, ns_QV from target network
+        next_VC = torch.clamp(next_VC.detach(), min=1e-8, max=1e8)
 
-        target_QC = cost + (not_done * self.discount * ns_QC)
-        target_VC = cost**2 - current_QC**2 + 2 * self.discount * cost * ns_QC +\
-            self.discount**2 * ns_VC + self.discount**2 * ns_QC**2  # Eq. 8 in the paper 
+        target_QC = cost + (not_done * self.discount * next_QC)
+        target_VC = cost**2 - current_QC**2 + 2 * self.discount * cost * next_QC +\
+            self.discount**2 * next_VC + self.discount**2 * next_QC**2  # Eq. 8 in the paper 
         target_QC = target_QC.detach()
         target_VC = torch.clamp(target_VC.detach(), min=1e-8, max=1e8)
 
         # Critic Loss
-        # get current Q estimates
-        current_Q1, current_Q2 = self.critic(obs, action)
         critic_loss = F.mse_loss(current_Q1, target_Q) + F.mse_loss(current_Q2, target_Q)
         logger.log('train/critic_loss', critic_loss, step)
 
@@ -169,24 +170,21 @@ class WCSACAgent(Agent):
         # Reward Critic
         actor_Q1, actor_Q2 = self.critic(obs, action)
         actor_Q = torch.min(actor_Q1, actor_Q2)
+
+        # Safety Critic with actor actions
         actor_QC, actor_VC = self.safety_critic(obs, action)
         actor_VC = torch.clamp(actor_VC.detach(), min=1e-8, max=1e8)
 
-        # Safety Critic + CVaR
+        # Safety Critic with actual actions
         current_QC, current_VC = self.safety_critic(obs, action_taken)
         current_VC = torch.clamp(current_VC.detach(), min=1e-8, max=1e8)
-        cvar = current_QC + self.pdf_cdf.cuda() * torch.sqrt(current_VC)  # Eq. 9 in the paper
 
-        # Damp impact of safety constraint in actor update / not used if damp_scale = 0
+        # CVaR + Damp impact of safety constraint in actor update / not used if damp_scale = 0
+        cvar = current_QC + self.pdf_cdf.cuda() * torch.sqrt(current_VC)  # Eq. 9 in the paper
         damp = self.damp_scale * torch.mean(self.target_cost - cvar)
 
         # Actor Loss
-        alpha = torch.clamp(self.alpha.detach(), min=1e-8, max=1e8)  # entropy temperature
-        beta = torch.clamp(self.beta.detach(), min=1e-8, max=1e8)
-        alpha = self.alpha.detach()
-        beta = self.beta.detach()  # safety temperature
-
-        actor_loss = torch.mean(alpha * log_prob - actor_Q + (beta - damp) * (actor_QC + self.pdf_cdf.cuda() * torch.sqrt(actor_VC)))
+        actor_loss = torch.mean(self.alpha.detach() * log_prob - actor_Q + (self.beta.detach() - damp) * (actor_QC + self.pdf_cdf.cuda() * torch.sqrt(actor_VC)))
 
         logger.log('train/actor_loss', actor_loss, step)
         logger.log('train/actor_entropy', -log_prob.mean(), step)
@@ -199,7 +197,7 @@ class WCSACAgent(Agent):
 
         self.actor.log(logger, step)
 
-        if self.learnable_temperature:  # TODO: Add implementation variant where one can choose fix entropy + fixed costs
+        if self.learnable_temperature:
             self.log_alpha_optimizer.zero_grad()
             alpha_loss = torch.mean(self.alpha * (-log_prob - self.target_entropy).detach())
             logger.log('train/alpha_loss', alpha_loss, step)
