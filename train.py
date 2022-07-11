@@ -34,9 +34,7 @@ class Workspace(object):
         assert cfg.seed != -1, f"seed must be provided, got default seed: {cfg.seed}"
         utils.set_seed_everywhere(cfg.seed)
         self.device = torch.device(cfg.device)
-        # self.env = utils.make_env(cfg)
         self.env = utils.make_safety_env(cfg)
-        # self.env = utils.make_custom_env(cfg)
 
         cfg.agent.params.obs_dim = int(self.env.observation_space.shape[0])
         cfg.agent.params.action_dim = int(self.env.action_space.shape[0])
@@ -148,6 +146,7 @@ class Workspace(object):
             obs = next_obs
             episode_step += 1
             self.step += 1
+        self.agent.save(os.path.join(self.work_dir, 'agent_final.pt'))
 
 
 @hydra.main(config_path='config/train.yaml', strict=True)

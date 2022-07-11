@@ -1,15 +1,15 @@
 defaults:
     - agent: wcsac
 
-env: 'point_goal_1'
+# env: 'point_goal_1'
 # env: 'cheetah_run'
-# env: 'custom_static'
+env: 'custom_static'
 # env: 'custom_dynamic'
 
 # this needs to be specified manually
 experiment: exp
 
-num_train_steps: 1e6
+num_train_steps: 2e6
 replay_buffer_capacity: 1e6
 
 num_seed_steps: 5000

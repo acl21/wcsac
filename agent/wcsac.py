@@ -184,7 +184,7 @@ class WCSACAgent(Agent):
         damp = self.damp_scale * torch.mean(self.target_cost - cvar)
 
         # Actor Loss
-        actor_loss = torch.mean(self.alpha.detach() * log_prob - actor_Q + (self.beta.detach() - damp) * (actor_QC + self.pdf_cdf.cuda() * torch.sqrt(actor_VC)))
+        actor_loss = torch.mean(self.alpha.detach() * log_prob - actor_Q + (self.beta.detach() - damp.detach()) * (actor_QC + self.pdf_cdf.cuda() * torch.sqrt(actor_VC)))
 
         logger.log('train/actor_loss', actor_loss, step)
         logger.log('train/actor_entropy', -log_prob.mean(), step)
