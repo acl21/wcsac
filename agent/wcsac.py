@@ -158,8 +158,8 @@ class WCSACAgent(Agent):
         total_loss.backward()
         self.all_critics_optimizer.step()
 
-        self.critic.log(logger, step)
-        self.safety_critic.log(logger, step)
+        # self.critic.log(logger, step)
+        # self.safety_critic.log(logger, step)
         
     def update_actor_and_alpha_and_beta(self, obs, action_taken, logger, step):
         # Get updated action from current pi_theta(*|obs)
@@ -195,7 +195,7 @@ class WCSACAgent(Agent):
         actor_loss.backward()
         self.actor_optimizer.step()
 
-        self.actor.log(logger, step)
+        # self.actor.log(logger, step)
 
         if self.learnable_temperature:
             self.log_alpha_optimizer.zero_grad()

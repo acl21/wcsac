@@ -24,11 +24,9 @@ class VideoRecorder(object):
                                height=self.height,
                                width=self.width,
                                camera_id=self.camera_id)
-            # frame = env.render(mode='human')
             self.frames.append(frame)
 
     def save(self, file_name):
         if self.enabled:
-            print("FRAME COUNT", len(self.frames))
             path = os.path.join(self.save_dir, file_name)
             imageio.mimsave(path, self.frames, fps=self.fps)
