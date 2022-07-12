@@ -90,6 +90,3 @@ class DiagGaussianActor(nn.Module):
         for i, m in enumerate(self.trunk):
             if type(m) == nn.Linear:
                 logger.log_param(f'train_actor/fc{i}', m, step)
-
-    def save(self, path):
-        torch.save(self.trunk.state_dict(), path)

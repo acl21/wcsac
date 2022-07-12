@@ -30,6 +30,7 @@ save_video: true
 seed: -1
 risk_level: 2
 
+restart_path: dummy
 
 # hydra configuration
 hydra:

@@ -52,6 +52,8 @@ class Workspace(object):
         self.video_recorder = VideoRecorder(
             self.work_dir if cfg.save_video else None)
         self.step = 0
+        if cfg.restart_path != 'dummy':
+            self.agent.load(cfg.restart_path)
 
     def evaluate(self):
         average_episode_reward = 0
@@ -88,6 +90,7 @@ class Workspace(object):
         self.logger.log('eval/episode_goals_met', average_episode_goals_met,
                         self.step)
         self.logger.dump(self.step)
+        self.agent.save(self.work_dir)
 
     def run(self):
         episode, episode_reward, episode_cost, done = 0, 0, 0, True
