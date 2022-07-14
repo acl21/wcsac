@@ -175,18 +175,18 @@ class WCSACAgent(Agent):
 
         # Safety Critic with actor actions
         actor_QC, actor_VC = self.safety_critic(obs, action)
-        actor_VC = torch.clamp(actor_VC.detach(), min=1e-8, max=1e8)
+        actor_VC = torch.clamp(actor_VC, min=1e-8, max=1e8)
 
         # Safety Critic with actual actions
         current_QC, current_VC = self.safety_critic(obs, action_taken)
-        current_VC = torch.clamp(current_VC.detach(), min=1e-8, max=1e8)
+        current_VC = torch.clamp(current_VC, min=1e-8, max=1e8)
 
         # CVaR + Damp impact of safety constraint in actor update / not used if damp_scale = 0
         cvar = current_QC + self.pdf_cdf.cuda() * torch.sqrt(current_VC)  # Eq. 9 in the paper
         damp = self.damp_scale * torch.mean(self.target_cost - cvar)
 
         # Actor Loss
-        actor_loss = torch.mean(self.alpha.detach() * log_prob - actor_Q + (self.beta.detach() - damp.detach()) * (actor_QC + self.pdf_cdf.cuda() * torch.sqrt(actor_VC)))
+        actor_loss = torch.mean(self.alpha.detach() * log_prob - (actor_Q + (self.beta.detach() - damp) * (actor_QC + self.pdf_cdf.cuda() * torch.sqrt(actor_VC))).detach())
 
         logger.log('train/actor_loss', actor_loss, step)
         logger.log('train/actor_entropy', -log_prob.mean(), step)

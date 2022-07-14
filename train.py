@@ -106,7 +106,7 @@ class Workspace(object):
         self.agent.save(self.work_dir)
 
     def run(self):
-        episode, ep_reward, ep_cost, total_cost, done = 0, 0, 0, True
+        episode, ep_reward, ep_cost, total_cost, done = 0, 0, 0, 0, True
         start_time = time.time()
         while self.step < self.cfg.num_train_steps:
             if done:
@@ -126,6 +126,9 @@ class Workspace(object):
                                 self.step)
                 self.logger.log('train/episode_cost', ep_cost,
                                 self.step)
+                if self.step > 0:
+                    self.logger.log('train/cost_rate', total_cost/self.step,
+                                    self.step)
 
                 obs = self.env.reset()
                 self.agent.reset()
@@ -136,7 +139,6 @@ class Workspace(object):
                 episode += 1
 
                 self.logger.log('train/episode', episode, self.step)
-                self.logger.log('train/cost_rate', total_cost/self.step, self.step)
 
             # sample action for data collection
             if self.step < self.cfg.num_seed_steps:
