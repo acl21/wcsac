@@ -231,16 +231,18 @@ class WCSACAgent(Agent):
             utils.soft_update_params(self.safety_critic, self.safety_critic_target, self.critic_tau)
 
     def save(self, path):
-        torch.save(self.actor.trunk.state_dict(), os.path.join(path, 'actor.pt'))
-        torch.save(self.critic.Q1.state_dict(), os.path.join(path, 'critic_q1.pt'))
-        torch.save(self.critic.Q2.state_dict(), os.path.join(path, 'critic_q2.pt'))
-        torch.save(self.safety_critic.QC.state_dict(), os.path.join(path, 'safety_critic_qc.pt'))
-        torch.save(self.safety_critic.VC.state_dict(), os.path.join(path, 'safety_critic_vc.pt'))
-
+        torch.save(self.actor.trunk.state_dict(), os.path.join(path, 'actor.pth'))
+        torch.save(self.critic.Q1.state_dict(), os.path.join(path, 'critic_q1.pth'))
+        torch.save(self.critic.Q2.state_dict(), os.path.join(path, 'critic_q2.pth'))
+        torch.save(self.safety_critic.QC.state_dict(), os.path.join(path, 'safety_critic_qc.pth'))
+        torch.save(self.safety_critic.VC.state_dict(), os.path.join(path, 'safety_critic_vc.pth'))
 
     def load(self, path):
-        self.actor.trunk.load_state_dict(torch.load(os.path.join(path, 'actor.pt')))
-        self.critic.Q1.load_state_dict(torch.load(os.path.join(path, 'critic_q1.pt')))
-        self.critic.Q2.load_state_dict(torch.load(os.path.join(path, 'critic_q2.pt')))
-        self.safety_critic.QC.load_state_dict(torch.load(os.path.join(path, 'safety_critic_qc.pt')))
-        self.safety_critic.VC.load_state_dict(torch.load(os.path.join(path, 'safety_critic_vc.pt')))
+        self.actor.trunk.load_state_dict(torch.load(os.path.join(path, 'actor.pth')))
+        self.critic.Q1.load_state_dict(torch.load(os.path.join(path, 'critic_q1.pth')))
+        self.critic.Q2.load_state_dict(torch.load(os.path.join(path, 'critic_q2.pth')))
+        self.safety_critic.QC.load_state_dict(torch.load(os.path.join(path, 'safety_critic_qc.pth')))
+        self.safety_critic.VC.load_state_dict(torch.load(os.path.join(path, 'safety_critic_vc.pth')))
+
+    def save_actor(self, path, id):
+        torch.save(self.actor.trunk.state_dict(), os.path.join(path, f'{id}.pth'))

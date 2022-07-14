@@ -55,6 +55,8 @@ class Workspace(object):
         if cfg.restart_path != 'dummy':
             self.agent.load(cfg.restart_path)
 
+        utils.make_dir(self.work_dir, 'model_weights')
+
     def evaluate(self):
         mean_reward = 0
         mean_cost = 0
@@ -98,12 +100,13 @@ class Workspace(object):
                         self.step)
         self.logger.log('eval/mean_goals_met', mean_goals_met,
                         self.step)
-        self.logger.log('eval/hazard_touches', mean_goals_met,
+        self.logger.log('eval/hazard_touches', mean_hazard_touches,
                         self.step)
         self.logger.log('eval/cost_limit_violations', cost_limit_violations,
                         self.step)
         self.logger.dump(self.step)
         self.agent.save(self.work_dir)
+        self.agent.save_actor(os.path.join(self.work_dir, 'model_weights'), self.step)
 
     def run(self):
         episode, ep_reward, ep_cost, total_cost, done = 0, 0, 0, 0, True
