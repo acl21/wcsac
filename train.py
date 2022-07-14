@@ -149,7 +149,7 @@ class Workspace(object):
             obs = next_obs
             episode_step += 1
             self.step += 1
-        self.agent.save(os.path.join(self.work_dir, 'agent_final.pt'))
+        self.agent.save(self.work_dir)
 
 
 @hydra.main(config_path='config/train.yaml', strict=True)
