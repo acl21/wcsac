@@ -20,7 +20,7 @@ class WCSACAgent(Agent):
                  actor_lr, actor_betas, actor_update_frequency, critic_lr,
                  critic_betas, critic_tau, critic_target_update_frequency,
                  batch_size, learnable_temperature, cost_limit, max_episode_len,
-                 risk_level):
+                 risk_level, damp_scale, lr_scale):
         super().__init__()
 
         self.action_range = action_range
@@ -39,7 +39,8 @@ class WCSACAgent(Agent):
         normal = tdist.normal.Normal(torch.tensor([0.0]), torch.tensor([1.0]))
         self.pdf_cdf = normal.log_prob(normal.icdf(torch.tensor(self.risk_level))).exp() / self.risk_level  # precompute CVaR Value for st. normal distribution
         self.pdf_cdf = self.pdf_cdf.cuda()
-        self.damp_scale = 0  # scale for damping the impact of the safety constraint in the actor update / 0 = NOT USED
+        self.damp_scale = damp_scale
+        self.cost_lr_scale = lr_scale
 
         # Reward critic
         self.critic = hydra.utils.instantiate(critic_cfg).to(self.device)
@@ -84,8 +85,8 @@ class WCSACAgent(Agent):
 
         # Beta (safety weight) optimizer
         self.log_beta_optimizer = torch.optim.Adam([self.log_beta],
-                                                    lr=alpha_lr,
-                                                    betas=alpha_betas) # Using same Adam hyperparams as alpha
+                                                    lr=alpha_lr*self.cost_lr_scale,
+                                                    betas=alpha_betas)
 
         self.train()
         self.critic_target.train()

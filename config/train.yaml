@@ -15,7 +15,7 @@ replay_buffer_capacity: 1e6
 num_seed_steps: 5000
 
 eval_frequency: 10000
-num_eval_episodes: 10
+num_eval_episodes: 20
 
 device: cuda
 

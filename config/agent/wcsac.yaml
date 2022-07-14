@@ -11,27 +11,29 @@ agent:
     actor_cfg: ${diag_gaussian_actor}
     discount: 0.99
     init_temperature: 0.1
-    alpha_lr: 1e-4
+    alpha_lr: 1e-3
     alpha_betas: [0.9, 0.999]
-    actor_lr: 1e-4
+    actor_lr: 1e-3
     actor_betas: [0.9, 0.999]
     actor_update_frequency: 1
-    critic_lr: 1e-4
+    critic_lr: 1e-3
     critic_betas: [0.9, 0.999]
     critic_tau: 0.005
     critic_target_update_frequency: 2
-    batch_size: 1024
+    batch_size: 256
     learnable_temperature: true
     cost_limit: 15
     max_episode_len: 1000
     risk_level: ${risk_level}
+    damp_scale: 10
+    lr_scale: 50
 
 double_q_critic:
   class: agent.critic.DoubleQCritic
   params:
     obs_dim: ${agent.params.obs_dim}
     action_dim: ${agent.params.action_dim}
-    hidden_dim: 64
+    hidden_dim: 256
     hidden_depth: 2
 
 safety_critic:
@@ -39,7 +41,7 @@ safety_critic:
   params:
     obs_dim: ${agent.params.obs_dim}
     action_dim: ${agent.params.action_dim}
-    hidden_dim: 64
+    hidden_dim: 256
     hidden_depth: 2
 
 diag_gaussian_actor:
@@ -48,5 +50,5 @@ diag_gaussian_actor:
     obs_dim: ${agent.params.obs_dim}
     action_dim: ${agent.params.action_dim}
     hidden_depth: 2
-    hidden_dim: 64
+    hidden_dim: 256
     log_std_bounds: [-20, 2]

@@ -19,9 +19,11 @@ COMMON_TRAIN_FORMAT = [
 COMMON_EVAL_FORMAT = [
     ('episode', 'E', 'int'),
     ('step', 'S', 'int'),
-    ('episode_reward', 'R', 'float'),
-    ('episode_cost', 'C', 'float'),
-    ('episode_goals_met', 'G', 'float')
+    ('mean_reward', 'R', 'float'),
+    ('mean_cost', 'C', 'float'),
+    ('mean_goals_met', 'GM', 'float'),
+    ('hazard_touches', 'HT', 'float'),
+    ('cost_limit_violations', 'CVIO', 'float')
 ]
 
 
