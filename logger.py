@@ -39,6 +39,7 @@ AGENT_TRAIN_FORMAT = {
     'wcsac': [
         ('batch_reward', 'BR', 'float'),
         ('batch_cost', 'BC', 'float'),
+        ('cost_rate', 'CRATE', 'float'),
         ('actor_loss', 'ALOSS', 'float'),
         ('critic_loss', 'CLOSS', 'float'),
         ('safety_critic_loss', 'SCLOSS', 'float'),
