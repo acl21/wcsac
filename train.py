@@ -87,7 +87,7 @@ class Workspace(object):
             mean_cost += ep_cost
             mean_goals_met += ep_goals_met
             mean_hazard_touches += ep_hazard_touches
-            cost_limit_violations += 1 if (ep_cost > self.cfg.cost_limit) else 0
+            cost_limit_violations += 1 if (ep_cost > self.cfg.agent.params.cost_limit) else 0
             self.video_recorder.save(f'{self.step}.mp4')
 
         mean_reward /= self.cfg.num_eval_episodes
