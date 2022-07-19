@@ -29,6 +29,7 @@ save_video: true
 
 seed: -1
 risk_level: 2
+lr: 1e-3
 
 restart_path: dummy
 
