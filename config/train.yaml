@@ -1,5 +1,5 @@
 defaults:
-    - agent: wcsac
+    - agent: wcsacp
 
 env: 'point_goal_1'
 # env: 'cheetah_run'
@@ -32,6 +32,8 @@ risk_level: 2
 lr: 1e-3
 
 restart_path: dummy
+epsilon: 0.1
+smooth_lambda: 0.01
 
 # hydra configuration
 hydra:

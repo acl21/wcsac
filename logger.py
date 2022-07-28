@@ -49,6 +49,21 @@ AGENT_TRAIN_FORMAT = {
         ("beta_loss", "BETLOSS", "float"),
         ("beta_value", "BETVAL", "float"),
     ],
+    "wcsacp": [
+        ("batch_reward", "BR", "float"),
+        ("batch_cost", "BC", "float"),
+        ("cost_rate", "CRATE", "float"),
+        ("actor_loss", "ALOSS", "float"),
+        ("critic_loss", "CLOSS", "float"),
+        ("smooth_loss", "SLOSS", "float"),
+        ("safety_critic_loss", "SCLOSS", "float"),
+        ("alpha_loss", "ALPLOSS", "float"),
+        ("alpha_value", "ALPVAL", "float"),
+        ("actor_entropy", "AENT", "float"),
+        ("actor_cost", "ACOST", "float"),
+        ("beta_loss", "BETLOSS", "float"),
+        ("beta_value", "BETVAL", "float"),
+    ]
 }
 
 

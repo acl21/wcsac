@@ -1,0 +1,56 @@
+agent:
+  name: wcsacp
+  class: agent.wcsacp.WCSACPAgent
+  params:
+    obs_dim: ??? # to be specified later
+    action_dim: ??? # to be specified later
+    action_range: ??? # to be specified later
+    device: ${device}
+    critic_cfg: ${double_q_critic}
+    safety_critic_cfg: ${safety_critic}
+    actor_cfg: ${diag_gaussian_actor}
+    discount: 0.99
+    init_temperature: 0.6931
+    alpha_lr: ${lr}
+    alpha_betas: [0.9, 0.999]
+    actor_lr: ${lr}
+    actor_betas: [0.9, 0.999]
+    actor_update_frequency: 1
+    critic_lr: ${lr}
+    critic_betas: [0.9, 0.999]
+    critic_tau: 0.005
+    critic_target_update_frequency: 2
+    batch_size: 256
+    learnable_temperature: true
+    cost_limit: 15
+    max_episode_len: 1000
+    risk_level: ${risk_level}
+    damp_scale: 10
+    lr_scale: 1
+    epsilon: ${epsilon}
+    smooth_lambda: ${smooth_lambda}
+
+double_q_critic:
+  class: agent.critic.DoubleQCritic
+  params:
+    obs_dim: ${agent.params.obs_dim}
+    action_dim: ${agent.params.action_dim}
+    hidden_dim: 256
+    hidden_depth: 2
+
+safety_critic:
+  class: agent.critic.SafetyCritic
+  params:
+    obs_dim: ${agent.params.obs_dim}
+    action_dim: ${agent.params.action_dim}
+    hidden_dim: 256
+    hidden_depth: 2
+
+diag_gaussian_actor:
+  class: agent.actor.DiagGaussianActor
+  params:
+    obs_dim: ${agent.params.obs_dim}
+    action_dim: ${agent.params.action_dim}
+    hidden_depth: 2
+    hidden_dim: 256
+    log_std_bounds: [-20, 2]
