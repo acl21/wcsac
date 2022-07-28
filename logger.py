@@ -48,6 +48,7 @@ AGENT_TRAIN_FORMAT = {
         ("actor_cost", "ACOST", "float"),
         ("beta_loss", "BETLOSS", "float"),
         ("beta_value", "BETVAL", "float"),
+        ("actor_variance", "AVAR", "float"),
     ],
     "wcsacp": [
         ("batch_reward", "BR", "float"),

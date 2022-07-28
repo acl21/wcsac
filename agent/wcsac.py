@@ -141,7 +141,7 @@ class WCSACAgent(Agent):
         dist = self.actor(next_obs)
         next_action = dist.rsample()
         log_prob = dist.log_prob(next_action).sum(-1, keepdim=True)
-
+        logger.log('train/actor_variance', torch.mean(self.actor.outputs["std"]), step)
         # get current Q estimates
         current_Q1, current_Q2 = self.critic(obs, action)
 
