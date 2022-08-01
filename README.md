@@ -1,6 +1,6 @@
-# Worst-Case Soft Actor-Critic for Safety-Constrained Reinforcement Learning: A PyTorch Implementation
+# Worst-Case Soft Actor-Critic (WCSAC) for Safety-Constrained Reinforcement Learning: A PyTorch Implementation
 
-This is PyTorch implementation of Worst-Case Soft Actor-Critic (WCSAC) [[Page]](https://ojs.aaai.org/index.php/AAAI/article/view/17272) [[PDF]](https://www.st.ewi.tudelft.nl/mtjspaan/pub/Yang21aaai.pdf). This repository is built on top [PyTorch SAC](https://github.com/denisyarats/pytorch_sac) by Denis Yarats and Ilya Kostrikov. You can find the official implementation in TensorFlow [here](https://github.com/AlgTUDelft/WCSAC).
+This is a PyTorch implementation of Worst-Case Soft Actor-Critic (WCSAC) [[Page]](https://ojs.aaai.org/index.php/AAAI/article/view/17272) [[PDF]](https://www.st.ewi.tudelft.nl/mtjspaan/pub/Yang21aaai.pdf). This repository is built on top [PyTorch SAC](https://github.com/denisyarats/pytorch_sac) by Denis Yarats and Ilya Kostrikov. You can find the official implementation in TensorFlow [here](https://github.com/AlgTUDelft/WCSAC).
 
 ## Results and Environment
 
@@ -29,13 +29,13 @@ Also, see `config/agent/wcsac.yaml` for full list of hyperparameters.
 
 # Acknowledgement
 
-This repository was built as part of the final project of our master's laboratory course. We sincerely appreciate the authors of the WCSAC paper, whose original impl<sub><sup>ementation and answers to issues we raised played a key role in shaping this repository. 
+This repository was built as part of the final project of our master's laboratory course. We sincerely appreciate the authors of the WCSAC paper, whose original implementation and answers to issues we raised played a key role in shaping this repository. 
 
 If you use this code in your research project please cite us and the original authors as:
 ```
 @misc{pytorch_wcsac,
   author = {Pfrang, Luca and Chandra, Akshay L and Koribille, Sri Harsha and Zhang, Baohe},
-  title = {Worst-Case Soft Actor-Critic (WCSAC) implementation in PyTorch},
+  title = {Worst-Case Soft Actor-Critic (WCSAC) for Safety-Constrained Reinforcement Learning: A PyTorch Implementation},
   year = {2022},
   publisher = {GitHub},
   journal = {GitHub repository},
