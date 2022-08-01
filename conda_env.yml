@@ -1,0 +1,17 @@
+name: pytorch_wcsac
+channels:
+  - defaults
+dependencies:
+  - python=3.9
+  - pytorch=1.11.0
+  - cudatoolkit=11.3
+  - absl-py
+  - pyparsing
+  - pip:
+    - termcolor
+    - git+git://github.com/deepmind/dm_control.git
+    - git+git://github.com/denisyarats/dmc2gym.git
+    - tb-nightly
+    - imageio
+    - imageio-ffmpeg
+    - git+git://github.com/facebookresearch/hydra@0.11_branch

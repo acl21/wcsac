@@ -1,0 +1,35 @@
+defaults:
+    - agent: wcsac
+
+env: 'point_goal_1'
+
+# this needs to be specified manually
+experiment: exp
+
+num_train_steps: 2e6
+replay_buffer_capacity: 1e6
+
+num_seed_steps: 5000
+
+eval_frequency: 20000
+num_eval_episodes: 20
+
+device: cuda
+
+# logger
+log_frequency: 10000
+log_save_tb: true
+
+# video recorder
+save_video: true
+
+seed: -1
+risk_level: 2
+
+restart_path: dummy
+
+# hydra configuration
+hydra:
+    name: ${env}
+    run:
+        dir: ./exp/${now:%Y.%m.%d}/${now:%H%M}_${agent.name}_${experiment}
