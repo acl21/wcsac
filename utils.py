@@ -58,16 +58,19 @@ def make_custom_env(cfg):
             "task": "goal",
             "goal_size": 0.3,
             "goal_keepout": 0.305,
-            "goal_locations": [(1.1, 1.1)],
+            "goal_locations": [(0.79413827, -0.28269969)],
             "observe_goal_lidar": True,
+            'observe_box_lidar': True,
             "observe_hazards": True,
             "constrain_hazards": True,
+            'observe_vases': True,
             "lidar_max_dist": 3,
             "lidar_num_bins": 16,
-            "hazards_num": 1,
-            "hazards_size": 0.7,
-            "hazards_keepout": 0.705,
-            "hazards_locations": [(0, 0)],
+            "hazards_num": 8,
+            "hazards_size": 0.2,
+            "hazards_keepout": 0.18,
+            "hazards_locations": [(-0.01160915, -0.13139404), (-1.09901719, -0.99530323), (0.03081399, -1.00922507), (0.6083558 ,  0.7765939), \
+                (1.31398354,  0.4422078), (-0.39260381, -0.42062426), ( 0.95638437, -1.15024822), (-0.11601288,  0.59559585)]
         }
         register(
             id="StaticEnv-v0",
