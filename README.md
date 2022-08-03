@@ -1,6 +1,6 @@
 # Worst-Case Soft Actor-Critic (WCSAC) for Safety-Constrained Reinforcement Learning: A PyTorch Implementation
 
-This is a PyTorch implementation of Worst-Case Soft Actor-Critic (WCSAC) [[Page]](https://ojs.aaai.org/index.php/AAAI/article/view/17272) [[PDF]](https://www.st.ewi.tudelft.nl/mtjspaan/pub/Yang21aaai). You can find the official TensorFlow implementation of WCSAC [here](https://github.com/AlgTUDelft/WCSAC).pdf). 
+This is a PyTorch implementation of Worst-Case Soft Actor-Critic (WCSAC) [[Page]](https://ojs.aaai.org/index.php/AAAI/article/view/17272) [[PDF]](https://www.st.ewi.tudelft.nl/mtjspaan/pub/Yang21aaai.pdf). You can find the official TensorFlow implementation of WCSAC [here](https://github.com/AlgTUDelft/WCSAC). 
 
 This repository is built around [PyTorch SAC](https://github.com/denisyarats/pytorch_sac) by Denis Yarats and Ilya Kostrikov. 
 
