@@ -11,10 +11,10 @@ This repository is built around [PyTorch SAC](https://github.com/denisyarats/pyt
 <img src="figures/results-env.png"/>
 </div>
 
-## SAC-Lagrangian vs WCSAC-0.1 (Demo)
+## SAC-Lagrangian vs WCSAC-0.1
 
 <div align="center">
-<img width="400" height="230" src="figures/wcsac-demo.gif"/>
+<img width="270" height="145" src="figures/wcsac-demo1.gif"/> <img width="270" height="145" src="figures/wcsac-demo2.gif"/>
 </div>
 
 ## Requirements
