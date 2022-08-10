@@ -11,6 +11,12 @@ This repository is built around [PyTorch SAC](https://github.com/denisyarats/pyt
 <img src="figures/results-env.png"/>
 </div>
 
+## SAC-Lagrangian vs WCSAC-0.1 (Demo)
+
+<div align="center">
+<img width="400" height="230" src="figures/wcsac-demo.gif"/>
+</div>
+
 ## Requirements
 We assume you have access to a GPU that can run `CUDA 11.2`. We also assume that you have Safety-Gym ([GitHub](https://github.com/openai/safety-gym), [Blog](https://openai.com/blog/safety-gym/)) and Mujoco-Py 2.0.2.7 installed. 
 ```
