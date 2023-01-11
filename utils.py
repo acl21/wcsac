@@ -40,7 +40,7 @@ def make_safety_env(cfg):
     env_split = cfg.env.split("_")
     env_name = f"Safexp-{env_split[0].capitalize()}{env_split[1].capitalize()}{env_split[-1]}-v0"
 
-    env = gym.make(env_name)
+    env = gym.make(env_name, render_mode="rgb_array")
     env.seed(cfg.seed)
 
     assert env.action_space.low.min() >= -1
@@ -74,7 +74,7 @@ def make_custom_env(cfg):
             entry_point="safety_gym.envs.mujoco:Engine",
             kwargs={"config": config1},
         )
-        env = gym.make("StaticEnv-v0")
+        env = gym.make("StaticEnv-v0", render_mode="rgb_array")
     else:
         config2 = {
             "placements_extents": [-1.5, -1.5, 1.5, 1.5],
