@@ -3,7 +3,7 @@ import abc
 
 class Agent(object):
     def reset(self):
-        """For state-full agents this function performs reseting at the beginning of each episode."""
+        """For state-full agents this function performs resetting at the beginning of each episode."""
         pass
 
     @abc.abstractmethod
