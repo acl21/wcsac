@@ -1,5 +1,6 @@
 defaults:
     - agent: wcsacp
+    - _self_
 
 env: 'point_goal_1'
 # env: 'cheetah_run'
@@ -34,9 +35,3 @@ lr: 1e-3
 restart_path: dummy
 epsilon: 0.1
 smooth_lambda: 0.01
-
-# hydra configuration
-hydra:
-    name: ${env}
-    run:
-        dir: ./exp/${now:%Y.%m.%d}/${now:%H%M}_${agent.name}_${experiment}

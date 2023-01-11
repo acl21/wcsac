@@ -2,16 +2,22 @@ name: pytorch_wcsac
 channels:
   - defaults
 dependencies:
-  - python=3.6
-  - pytorch
-  - cudatoolkit=9.2
+  - python=3.9
+  - pip
   - absl-py
   - pyparsing
   - pip:
-    - termcolor
-    - git+git://github.com/deepmind/dm_control.git
-    - git+git://github.com/denisyarats/dmc2gym.git
-    - tb-nightly
-    - imageio
-    - imageio-ffmpeg
-    - git+git://github.com/facebookresearch/hydra@0.11_branch
+      - termcolor
+      - dm-control
+      - git+git://github.com/denisyarats/dmc2gym.git
+      - tb-nightly
+      - imageio
+      - imageio-ffmpeg
+      - hydra-core==1.3.1
+      - numpy==1.23.4
+      - torch
+      - torchvision
+      - torchaudio
+      - mujoco-py
+      - gym==0.26.2
+      - git+git://github.com/davideferrari95/safety-gym.git

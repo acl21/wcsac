@@ -36,13 +36,13 @@ class Workspace(object):
         else:
             self.env_max_steps = self.env.num_steps
 
-        cfg.agent.params.obs_dim = int(self.env.observation_space.shape[0])
-        cfg.agent.params.action_dim = int(self.env.action_space.shape[0])
-        cfg.agent.params.action_range = [
+        cfg.agent.agent.obs_dim = int(self.env.observation_space.shape[0])
+        cfg.agent.agent.action_dim = int(self.env.action_space.shape[0])
+        cfg.agent.agent.action_range = [
             float(self.env.action_space.low.min()),
             float(self.env.action_space.high.max()),
         ]
-        self.agent = hydra.utils.instantiate(cfg.agent)
+        self.agent = hydra.utils.instantiate(cfg.agent.agent, _recursive_=False)
 
         self.replay_buffer = ReplayBuffer(
             self.env.observation_space.shape,
@@ -57,15 +57,15 @@ class Workspace(object):
     def evaluate(self):
         average_episode_reward = 0
         for episode in range(self.cfg.num_eval_episodes):
-            obs = self.env.reset()
+            obs, _ = self.env.reset()
             self.agent.reset()
             self.video_recorder.init(enabled=(episode == 0))
-            done = False
+            done, truncated = False, False
             episode_reward = 0
-            while not done:
+            while not done or truncated:
                 with utils.eval_mode(self.agent):
                     action = self.agent.act(obs, sample=False)
-                obs, reward, done, _ = self.env.step(action)
+                obs, reward, done, truncated, _ = self.env.step(action)
                 self.video_recorder.record(self.env)
                 episode_reward += reward
 
@@ -76,10 +76,10 @@ class Workspace(object):
         self.logger.dump(self.step)
 
     def run(self):
-        episode, episode_reward, done = 0, 0, True
+        episode, episode_reward, done, truncated = 0, 0, True, True
         start_time = time.time()
         while self.step < self.cfg.num_train_steps:
-            if done:
+            if done or truncated:
                 if self.step > 0:
                     self.logger.log("train/duration", time.time() - start_time, self.step)
                     start_time = time.time()
@@ -92,9 +92,9 @@ class Workspace(object):
 
                 self.logger.log("train/episode_reward", episode_reward, self.step)
 
-                obs = self.env.reset()
+                obs, _ = self.env.reset()
                 self.agent.reset()
-                done = False
+                done, truncated = False, False
                 episode_reward = 0
                 episode_step = 0
                 episode += 1
@@ -113,7 +113,7 @@ class Workspace(object):
             if self.step >= self.cfg.num_seed_steps:
                 self.agent.update(self.replay_buffer, self.logger, self.step)
 
-            next_obs, reward, done, _ = self.env.step(action)
+            next_obs, reward, done, truncated, _ = self.env.step(action)
 
             # allow infinite bootstrap
             done = float(done)
@@ -127,7 +127,7 @@ class Workspace(object):
             self.step += 1
 
 
-@hydra.main(config_path="config/train.yaml", strict=True)
+@hydra.main(config_path='config', config_name='train', version_base=None)
 def main(cfg):
     workspace = Workspace(cfg)
     workspace.run()
