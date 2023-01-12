@@ -51,7 +51,7 @@ class Workspace(object):
         if cfg.restart_path != "dummy":
             self.agent.load(cfg.restart_path)
 
-        utils.make_dir(self.work_dir, "model_weights")
+        utils.make_dir(self.work_dir, "data/model_weights")
 
     def evaluate(self):
         mean_reward = 0
