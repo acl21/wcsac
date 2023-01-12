@@ -69,7 +69,7 @@ class Workspace(object):
             ep_goals_met = 0
             ep_hazard_touches = 0
 
-            while not done or truncated:
+            while not done and not truncated:
                 with utils.eval_mode(self.agent):
                     action = self.agent.act(obs, sample=False)
                 obs, reward, done, truncated, info = self.env.step(action)
@@ -96,8 +96,8 @@ class Workspace(object):
         self.logger.log("eval/hazard_touches", mean_hazard_touches, self.step)
         self.logger.log("eval/cost_limit_violations", cost_limit_violations, self.step)
         self.logger.dump(self.step)
-        self.agent.save(self.work_dir)
-        self.agent.save_actor(os.path.join(self.work_dir, "model_weights"), self.step)
+        self.agent.save(os.path.join(self.work_dir, "data"))
+        self.agent.save_actor(os.path.join(self.work_dir, "data/model_weights"), self.step)
 
     def run(self):
         episode, ep_reward, ep_cost, total_cost, done, truncated = 0, 0, 0, 0, True, True
@@ -155,7 +155,7 @@ class Workspace(object):
             obs = next_obs
             ep_step += 1
             self.step += 1
-        self.agent.save(self.work_dir)
+        self.agent.save(os.path.join(self.work_dir, "data"))
 
 
 @hydra.main(config_path='config', config_name='train', version_base=None)

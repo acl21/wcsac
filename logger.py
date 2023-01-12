@@ -152,7 +152,7 @@ class Logger(object):
         self._log_dir = log_dir
         self._log_frequency = log_frequency
         if save_tb:
-            tb_dir = os.path.join(log_dir, "tb")
+            tb_dir = os.path.join(log_dir, "data/tb")
             if os.path.exists(tb_dir):
                 try:
                     shutil.rmtree(tb_dir)
@@ -165,8 +165,8 @@ class Logger(object):
         # each agent has specific output format for training
         assert agent in AGENT_TRAIN_FORMAT
         train_format = COMMON_TRAIN_FORMAT + AGENT_TRAIN_FORMAT[agent]
-        self._train_mg = MetersGroup(os.path.join(log_dir, "train"), formating=train_format)
-        self._eval_mg = MetersGroup(os.path.join(log_dir, "eval"), formating=COMMON_EVAL_FORMAT)
+        self._train_mg = MetersGroup(os.path.join(tb_dir, "train"), formating=train_format)
+        self._eval_mg = MetersGroup(os.path.join(tb_dir, "eval"), formating=COMMON_EVAL_FORMAT)
 
     def _should_log(self, step, log_frequency):
         log_frequency = log_frequency or self._log_frequency
