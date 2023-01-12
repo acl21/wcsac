@@ -1,12 +1,7 @@
 __pycache__/
 .ipynb_checkpoints/
-exp
-tb
-data
 
 # Experiment File/Folder
-model_weights
-outputs
-video
-eval.csv
-train.csv
+data/
+outputs/
+video/
