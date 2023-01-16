@@ -75,6 +75,7 @@ def make_custom_env(cfg):
         register(
             id="StaticEnv-v0",
             entry_point="safety_gym.envs.mujoco:Engine",
+            max_episode_steps=1000,
             kwargs={"config": config1},
         )
         env = gym.make("StaticEnv-v0", render_mode="rgb_array")
@@ -97,6 +98,7 @@ def make_custom_env(cfg):
         register(
             id="DynamicEnv-v0",
             entry_point="safety_gym.envs.mujoco:Engine",
+            max_episode_steps=1000,
             kwargs={"config": config2},
         )
         env = gym.make("DynamicEnv-v0", render_mode="rgb_array")
