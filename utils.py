@@ -77,7 +77,7 @@ def make_custom_env(cfg):
             entry_point="safety_gym.envs.mujoco:Engine",
             kwargs={"config": config1},
         )
-        env = gym.make("StaticEnv-v0")
+        env = gym.make("StaticEnv-v0", render_mode="rgb_array")
     else:
         config2 = {
             "placements_extents": [-1.5, -1.5, 1.5, 1.5],
