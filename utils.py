@@ -96,7 +96,7 @@ def make_custom_env(cfg):
             entry_point="safety_gym.envs.mujoco:Engine",
             kwargs={"config": config2},
         )
-        env = gym.make("DynamicEnv-v0")
+        env = gym.make("DynamicEnv-v0", render_mode="rgb_array")
 
     return env
 
