@@ -62,7 +62,7 @@ class Workspace(object):
             self.video_recorder.init(enabled=(episode == 0))
             done, truncated = False, False
             episode_reward = 0
-            while not done or truncated:
+            while not done and not truncated:
                 with utils.eval_mode(self.agent):
                     action = self.agent.act(obs, sample=False)
                 obs, reward, done, truncated, _ = self.env.step(action)
