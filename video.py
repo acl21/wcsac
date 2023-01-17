@@ -5,7 +5,7 @@ import utils
 
 
 class VideoRecorder(object):
-    def __init__(self, root_dir, height=256, width=256, camera_id=0, fps=30):
+    def __init__(self, root_dir, height=1024, width=1024, camera_id=0, fps=30):
         self.save_dir = utils.make_dir(root_dir, "video") if root_dir else None
         self.height = height
         self.width = width
@@ -20,7 +20,6 @@ class VideoRecorder(object):
     def record(self, env):
         if self.enabled:
             frame = env.render(
-                mode="rgb_array",
                 height=self.height,
                 width=self.width,
                 camera_id=self.camera_id,

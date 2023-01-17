@@ -1,5 +1,7 @@
 __pycache__/
 .ipynb_checkpoints/
-exp
-tb
-data
+
+# Experiment File/Folder
+data/
+outputs/
+video/

@@ -31,13 +31,13 @@ class Workspace(object):
         self.device = torch.device(cfg.device)
         self.env = utils.make_safety_env(cfg)
 
-        cfg.agent.params.obs_dim = int(self.env.observation_space.shape[0])
-        cfg.agent.params.action_dim = int(self.env.action_space.shape[0])
-        cfg.agent.params.action_range = [
+        cfg.agent.agent.obs_dim = int(self.env.observation_space.shape[0])
+        cfg.agent.agent.action_dim = int(self.env.action_space.shape[0])
+        cfg.agent.agent.action_range = [
             float(self.env.action_space.low.min()),
             float(self.env.action_space.high.max()),
         ]
-        self.agent = hydra.utils.instantiate(cfg.agent)
+        self.agent = hydra.utils.instantiate(cfg.agent.agent, _recursive_=False)
 
         self.replay_buffer = ReplayBuffer(
             self.env.observation_space.shape,
@@ -51,7 +51,7 @@ class Workspace(object):
         if cfg.restart_path != "dummy":
             self.agent.load(cfg.restart_path)
 
-        utils.make_dir(self.work_dir, "model_weights")
+        utils.make_dir(self.work_dir, "data/model_weights")
 
     def evaluate(self):
         mean_reward = 0
@@ -60,19 +60,19 @@ class Workspace(object):
         mean_hazard_touches = 0
         cost_limit_violations = 0
         for episode in range(self.cfg.num_eval_episodes):
-            obs = self.env.reset()
+            obs, _ = self.env.reset()
             self.agent.reset()
             self.video_recorder.init(enabled=(episode == 0))
-            done = False
+            done, truncated = False, False
             ep_reward = 0
             ep_cost = 0
             ep_goals_met = 0
             ep_hazard_touches = 0
 
-            while not done:
+            while not done and not truncated:
                 with utils.eval_mode(self.agent):
                     action = self.agent.act(obs, sample=False)
-                obs, reward, done, info = self.env.step(action)
+                obs, reward, done, truncated, info = self.env.step(action)
                 self.video_recorder.record(self.env)
                 ep_reward += reward
                 ep_cost += info.get("cost", 0)
@@ -83,7 +83,7 @@ class Workspace(object):
             mean_cost += ep_cost
             mean_goals_met += ep_goals_met
             mean_hazard_touches += ep_hazard_touches
-            cost_limit_violations += 1 if (ep_cost > self.cfg.agent.params.cost_limit) else 0
+            cost_limit_violations += 1 if (ep_cost > self.cfg.agent.agent.cost_limit) else 0
             self.video_recorder.save(f"{self.step}.mp4")
 
         mean_reward /= self.cfg.num_eval_episodes
@@ -96,14 +96,14 @@ class Workspace(object):
         self.logger.log("eval/hazard_touches", mean_hazard_touches, self.step)
         self.logger.log("eval/cost_limit_violations", cost_limit_violations, self.step)
         self.logger.dump(self.step)
-        self.agent.save(self.work_dir)
-        self.agent.save_actor(os.path.join(self.work_dir, "model_weights"), self.step)
+        self.agent.save(os.path.join(self.work_dir, "data"))
+        self.agent.save_actor(os.path.join(self.work_dir, "data/model_weights"), self.step)
 
     def run(self):
-        episode, ep_reward, ep_cost, total_cost, done = 0, 0, 0, 0, True
+        episode, ep_reward, ep_cost, total_cost, done, truncated = 0, 0, 0, 0, True, True
         start_time = time.time()
         while self.step < self.cfg.num_train_steps:
-            if done:
+            if done or truncated:
                 if self.step > 0:
                     self.logger.log("train/duration", time.time() - start_time, self.step)
                     start_time = time.time()
@@ -119,9 +119,9 @@ class Workspace(object):
                 if self.step > 0:
                     self.logger.log("train/cost_rate", total_cost / self.step, self.step)
 
-                obs = self.env.reset()
+                obs, _ = self.env.reset()
                 self.agent.reset()
-                done = False
+                done, truncated = False, False
                 ep_reward = 0
                 ep_cost = 0
                 ep_step = 0
@@ -140,11 +140,11 @@ class Workspace(object):
             if self.step >= self.cfg.num_seed_steps:
                 self.agent.update(self.replay_buffer, self.logger, self.step)
 
-            next_obs, reward, done, info = self.env.step(action)
+            next_obs, reward, done, truncated,info = self.env.step(action)
             cost = info.get("cost", 0)
             # allow infinite bootstrap
             done = float(done)
-            done_no_max = 0 if ep_step + 1 == self.env.num_steps else done
+            done_no_max = 0 if ep_step + 1 == self.env.spec.max_episode_steps else done
             ep_reward += reward
             ep_cost += cost
             total_cost += cost
@@ -153,12 +153,12 @@ class Workspace(object):
             obs = next_obs
             ep_step += 1
             self.step += 1
-        self.agent.save(self.work_dir)
+        self.agent.save(os.path.join(self.work_dir, "data"))
         self.logger.log("eval/episode", episode, self.step)
         self.evaluate()
 
 
-@hydra.main(config_path="config/train.yaml", strict=True)
+@hydra.main(config_path='config', config_name='train', version_base=None)
 def main(cfg):
     workspace = Workspace(cfg)
     workspace.run()

@@ -1,5 +1,6 @@
 defaults:
     - agent: wcsac
+    - _self_
 
 env: 'point_goal_1'
 
@@ -27,9 +28,3 @@ seed: -1
 risk_level: 2
 
 restart_path: dummy
-
-# hydra configuration
-hydra:
-    name: ${env}
-    run:
-        dir: ./exp/${now:%Y.%m.%d}/${now:%H%M}_${agent.name}_${experiment}
