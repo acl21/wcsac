@@ -1,0 +1,19 @@
+download mujoco200 from https://www.roboti.us/download.html
+unzip it inside .mujoco
+download the activation key (https://www.roboti.us/license.html) and place it in .mujoco
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/research/.mujoco/mujoco200/bin
+
+sudo apt-get install libosmesa6-dev
+sudo apt-get install -y libglew-dev
+export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libGLEW.so
+sudo apt-get install gcc
+sudo apt-get install build-essential
+sudo apt-get install -y patchelf
+
+pip install mujoco-py==2.0.2.7
+
+sudo mkdir -p /usr/lib/nvidia-000
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/nvidia-000
+
+To compile mujoco for the first time, set LD_PRELOAD and to run the code, unset it. 
